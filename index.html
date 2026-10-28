@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>饮食男女</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(165deg, #fff7e6 0%, #ffe9c9 45%, #ffe0c2 100%);
+    color: #6b4a3a;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* 背景漂浮食物装饰 */
+  .bg-decor span {
+    position: fixed;
+    font-size: 34px;
+    opacity: .18;
+    user-select: none;
+    pointer-events: none;
+    animation: float 7s ease-in-out infinite;
+    z-index: 0;
+  }
+  .bg-decor span:nth-child(1){ top: 6%;  left: 4%; animation-delay: 0s; }
+  .bg-decor span:nth-child(2){ top: 14%; right: 6%; animation-delay: 1.2s; font-size: 44px; }
+  .bg-decor span:nth-child(3){ top: 42%; left: 3%; animation-delay: 2s; font-size: 40px; }
+  .bg-decor span:nth-child(4){ top: 55%; right: 4%; animation-delay: .6s; }
+  .bg-decor span:nth-child(5){ bottom: 18%; left: 7%; animation-delay: 1.8s; font-size: 42px; }
+  .bg-decor span:nth-child(6){ bottom: 12%; right: 8%; animation-delay: 2.6s; }
+  .bg-decor span:nth-child(7){ top: 30%; left: 45%; animation-delay: 3.2s; font-size: 40px; }
+  .bg-decor span:nth-child(8){ bottom: 35%; right: 20%; animation-delay: .9s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-16px) rotate(8deg); }
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 16px 90px;
+  }
+
+  header { text-align: center; margin-bottom: 8px; }
+  header h1 {
+    margin: 0;
+    font-size: 34px;
+    letter-spacing: 4px;
+    color: #e07b39;
+    text-shadow: 0 2px 0 #fff;
+  }
+  header .sub {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #c08a66;
+  }
+
+  /* 面包屑 / 导航条 */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 0 6px;
+    min-height: 32px;
+  }
+  .nav .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    font-size: 14px;
+    color: #b26a3a;
+    background: rgba(255,255,255,.7);
+    border: 1px solid #f2cfa8;
+    border-radius: 999px;
+    cursor: pointer;
+    visibility: hidden;
+  }
+  .nav .back.show { visibility: visible; }
+  .nav .reset {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #a0795c;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .level-title {
+    margin: 10px 0 16px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #8a5438;
+    text-align: center;
+  }
+  .level-title small {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #b98a6c;
+  }
+
+  /* 按钮网格 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  .btn {
+    padding: 14px 10px;
+    font-size: 15px;
+    color: #6b4a3a;
+    text-align: center;
+    background: linear-gradient(180deg, #fffdf7, #ffedd9);
+    border: 1.5px solid #f6cf9f;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(214, 140, 70, .16);
+    transition: transform .12s, box-shadow .12s, background .2s;
+    overflow-wrap: anywhere;
+  }
+  .btn:active { transform: translateY(2px) scale(.98); }
+  .btn:hover { box-shadow: 0 5px 16px rgba(214, 140, 70, .28); }
+
+  .btn.cat {
+    font-weight: 700;
+    font-size: 16px;
+    color: #8a4a20;
+    background: linear-gradient(180deg, #ffdfb3, #ffc98f);
+    border-color: #f2b069;
+  }
+  .btn.diy {
+    background: linear-gradient(180deg, #fff3f3, #ffdddd);
+    border-color: #f0b6b6;
+    color: #b05555;
+  }
+
+  /* 第一层大分类卡片（2×2 居中铺满） */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 18px;
+    max-width: 520px;
+    margin: 16px auto 0;
+  }
+  .hero-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 170px;
+    padding: 24px 12px;
+    font-size: 21px;
+    font-weight: 800;
+    color: #8a4a20;
+    background: linear-gradient(180deg, #ffdfb3, #ffc98f);
+    border: 2px solid #f2b069;
+    border-radius: 22px;
+    cursor: pointer;
+    box-shadow: 0 5px 18px rgba(214, 140, 70, .22);
+    transition: transform .12s, box-shadow .12s;
+  }
+  .hero-btn:active { transform: translateY(3px) scale(.98); }
+  .hero-btn:hover { box-shadow: 0 8px 24px rgba(214, 140, 70, .32); }
+  .hero-btn .ic { font-size: 46px; line-height: 1; }
+  .hero-btn.diy {
+    background: linear-gradient(180deg, #fff3f3, #ffdddd);
+    border-color: #f0b6b6;
+    color: #b05555;
+  }
+
+  /* 底部随机一句话 */
+  .quote {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 2;
+    padding: 12px 18px;
+    text-align: center;
+    font-size: 14px;
+    color: #b07a50;
+    background: linear-gradient(180deg, rgba(255,248,235,.2), rgba(255,240,215,.95));
+    backdrop-filter: blur(2px);
+  }
+
+  /* 结果弹层 */
+  .mask {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(120, 70, 30, .35);
+    padding: 24px;
+  }
+  .mask.show { display: flex; }
+  .result-card {
+    width: 100%;
+    max-width: 360px;
+    padding: 32px 24px 26px;
+    text-align: center;
+    background: #fffdf7;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(120, 60, 20, .25);
+    animation: popIn .35s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .result-card .emoji { font-size: 44px; }
+  .result-card .tip {
+    margin: 14px 0 4px;
+    font-size: 15px;
+    color: #9a6b4a;
+  }
+  .result-card .food {
+    margin: 6px 0 22px;
+    font-size: 30px;
+    font-weight: 800;
+    color: #e07b39;
+    overflow-wrap: anywhere;
+  }
+  .result-card .again {
+    padding: 10px 26px;
+    font-size: 15px;
+    color: #fff;
+    background: linear-gradient(180deg, #ffa94d, #f58a2e);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  /* 轻提示 */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 90px;
+    transform: translateX(-50%) translateY(10px);
+    z-index: 20;
+    padding: 10px 22px;
+    font-size: 15px;
+    color: #fff;
+    background: rgba(120, 70, 40, .9);
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+  <div class="bg-decor">
+    <span>🍜</span><span>🍕</span><span>🥟</span><span>🍰</span>
+    <span>🍤</span><span>🥘</span><span>🍚</span><span>🍡</span>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <h1>饮食男女</h1>
+      <p class="sub">今天，到底想吃点什么？</p>
+    </header>
+
+    <div class="nav">
+      <button class="back" id="backBtn">‹ 返回上一级</button>
+      <button class="reset" id="resetBtn">↺ 重新开始</button>
+    </div>
+
+    <div class="level-title" id="levelTitle">你想吃哪一类？</div>
+    <main class="grid" id="main"></main>
+  </div>
+
+  <div class="quote" id="quote"></div>
+
+  <div class="mask" id="mask">
+    <div class="result-card">
+      <div class="emoji">🎉</div>
+      <p class="tip">恭喜你，想好今天要吃</p>
+      <div class="food" id="resultFood"></div>
+      <button class="again" id="againBtn">再选一次</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const QUOTES = [
+    "人生得意须尽吃 不然空腹站不直",
+    "对独生嘴好点怎么了",
+    "很抱歉盆友们今天吃了贵饭",
+    "小腹三层 非一日馋也",
+    "这辈子 唯一放不下的就是筷子",
+    "吃饭不拍照 人生少一乐",
+    "又饿了 果然漂亮不能当饭吃",
+    "好吃的不能独享 大家一起看看吧",
+    "饭后走一走 路边又吃九十九",
+    "好喜欢小动物 比如烤鸭 炸鸡 水煮鱼",
+    "真是麻雀吃了香蕉 雀食香啊",
+    "一年四季：春肥 夏胖 秋膘冬圆",
+    "嘴巴这辈子跟着我算是享福了",
+    "苦了谁 也不能苦了我这樱桃小嘴",
+    "养的最成功的多肉就是自己",
+    "今天又是你陪朕 炸姬",
+    "很内向 吃饭紧张的差点给锅掀了",
+    "周一周五吃苦 周六周日大补特补",
+    "我这七情六欲 只剩下食欲了",
+    "爱吃的女孩运气不会差 因为时来运转",
+    "一斤油 两斤糖 三顿吃成蕉太狼",
+    "任何时间 任何地点 超级侦探 认真干饭",
+    "今天依旧是碌碌无为的知食分子",
+    "好看的锁骨千篇一律 有趣的肚子弹来弹去"
+  ];
+
+  const TREE = {
+    name: "饮食男女",
+    children: [
+      {
+        name: "中餐",
+        children: [
+          {
+            name: "米食",
+            children: [
+              {
+                name: "饭类",
+                children: [
+                  { name: "干饭（少汤汁）", children: ["白米饭","扬州炒饭","煲仔饭","卤肉饭","竹筒饭","腊味饭","盖浇饭","杂粮饭","糯米饭","八宝饭"] },
+                  { name: "粥 · 流质（带汤水）", children: ["白粥","小米粥","皮蛋瘦肉粥","南瓜粥","泡饭"] }
+                ]
+              },
+              {
+                name: "粉类",
+                children: [
+                  { name: "汤粉", children: ["过桥米线","桂林汤粉","老友粉","汤米粉"] },
+                  { name: "拌 · 炒粉", children: ["炒河粉","拌米粉","卷粉","剪粉"] },
+                  { name: "蒸粉", children: ["肠粉","米皮"] },
+                  { name: "特色粉", children: ["螺蛳粉"] }
+                ]
+              },
+              { name: "糯米类", children: ["粽子","汤圆","元宵","糍粑","粢饭团","麻团","糯米鸡","酒酿","驴打滚","叶儿粑","青团"] },
+              { name: "米糕类", children: ["米发糕","水塔糕","伦教糕","汽糕","凉糕","米豆腐","米凉虾","饵块","饵丝"] }
+            ]
+          },
+          {
+            name: "面食（小麦粉）",
+            children: [
+              {
+                name: "面条",
+                children: [
+                  { name: "汤面", children: ["拉面","烩面","牛肉面","臊子面","重庆小面","挂面汤面"] },
+                  { name: "拌面", children: ["担担面","凉面","油泼面","炸酱面"] },
+                  { name: "炒 · 焖面", children: ["炒面","焖面"] },
+                  { name: "其他面类", children: ["刀削面","手擀面","面片","面疙瘩"] }
+                ]
+              },
+              { name: "包馅类", children: ["包子","饺子","馄饨","锅贴","春卷","馅饼","菜盒子"] },
+              { name: "饼类", children: ["馒头","花卷","烙饼","葱油饼","锅盔","烧饼","馕","手抓饼","酱香饼","千层饼","鸡蛋灌饼","发面饼"] },
+              { name: "油炸面点", children: ["油条","麻花","馓子","油饼","酥饼"] }
+            ]
+          },
+          { name: "风味菜式", children: ["火锅","麻辣烫","冒菜","串串香","烧烤","干锅","香锅","涮羊肉","卤味","凉菜拼盘"] }
+        ]
+      },
+      {
+        name: "西餐",
+        children: [
+          {
+            name: "扒类主菜",
+            children: [
+              { name: "畜肉扒", children: ["牛排","羊排","猪排","牛柳"] },
+              { name: "禽肉扒", children: ["香煎鸡排","鸭胸排"] },
+              { name: "海鲜扒", children: ["煎三文鱼排","鳕鱼排","煎虾排"] }
+            ]
+          },
+          {
+            name: "意式主食",
+            children: [
+              { name: "意面类", children: ["直面","通心粉","螺旋面","千层面","贝壳面"] },
+              { name: "焗饭烩饭", children: ["意式烩饭","海鲜烩饭"] },
+              { name: "饼底主食", children: ["披萨"] }
+            ]
+          },
+          {
+            name: "西式简餐 & 快餐",
+            children: [
+              { name: "汉堡三明治类", children: ["牛肉汉堡","鸡腿堡","三明治","热狗"] },
+              { name: "油炸小食", children: ["炸鸡","薯条","鸡米花","洋葱圈","炸鱿鱼圈"] },
+              { name: "薄饼类", children: ["可丽饼"] }
+            ]
+          },
+          {
+            name: "前菜 & 沙拉",
+            children: [
+              { name: "冷前菜", children: ["焗蜗牛","鹅肝酱","烟熏三文鱼","火腿拼盘"] },
+              { name: "沙拉", children: ["蔬菜沙拉","凯撒沙拉","金枪鱼沙拉","牛油果沙拉"] }
+            ]
+          },
+          {
+            name: "西式汤品",
+            children: [
+              { name: "浓汤", children: ["奶油蘑菇汤","南瓜浓汤","土豆浓汤"] },
+              { name: "清汤", children: ["罗宋汤","法式洋葱汤","蔬菜清汤"] }
+            ]
+          },
+          {
+            name: "面包",
+            children: [
+              { name: "硬质欧包", children: ["法棍","欧包","黑麦面包"] },
+              { name: "软面包", children: ["吐司","餐包","牛角包","布里欧修"] }
+            ]
+          },
+          {
+            name: "甜点 & 甜品",
+            children: [
+              { name: "蛋糕类", children: ["戚风蛋糕","芝士蛋糕","黑森林","提拉米苏"] },
+              { name: "酥派类", children: ["苹果派","蛋挞","泡芙"] },
+              { name: "冰品 & 布丁", children: ["布丁","冰淇淋","奶冻"] }
+            ]
+          },
+          {
+            name: "饮品",
+            children: [
+              { name: "咖啡", children: ["美式","拿铁","卡布奇诺"] },
+              { name: "茶饮", children: ["红茶","花草茶"] }
+            ]
+          }
+        ]
+      },
+      {
+        name: "地方菜系",
+        children: [
+          { name: "鲁菜", children: ["葱烧海参","糖醋鲤鱼","九转大肠","油焖大虾","德州扒鸡"] },
+          { name: "川菜", children: ["麻婆豆腐","水煮鱼","辣子鸡","回锅肉","鱼香肉丝","宫保鸡丁"] },
+          { name: "粤菜", children: ["白灼虾","豉汁蒸排骨","烧鹅","叉烧","文昌鸡"] },
+          { name: "苏菜", children: ["清炖狮子头","文思豆腐","松鼠鳜鱼","大煮干丝"] },
+          { name: "浙菜", children: ["西湖醋鱼","东坡肉","龙井虾仁","叫花鸡"] },
+          { name: "闽菜", children: ["佛跳墙","荔枝肉","同安封肉","海蛎煎"] },
+          { name: "湘菜", children: ["剁椒鱼头","辣椒炒肉","腊味合蒸","东安鸡"] },
+          { name: "徽菜", children: ["臭鳜鱼","毛豆腐","火腿炖甲鱼","黄山炖鸽"] },
+          { name: "京菜", children: ["北京烤鸭","炸酱面"] },
+          { name: "东北菜", children: ["锅包肉","地三鲜","小鸡炖蘑菇"] },
+          { name: "沪菜", children: ["红烧肉","响油鳝糊"] },
+          { name: "滇菜", children: ["汽锅鸡","过桥米线"] }
+        ]
+      },
+      { name: "DIY自制", diy: true }
+    ]
+  };
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  let stack = [];
+  const main = document.getElementById("main");
+  const levelTitle = document.getElementById("levelTitle");
+  const backBtn = document.getElementById("backBtn");
+  const mask = document.getElementById("mask");
+  const resultFood = document.getElementById("resultFood");
+  const toast = document.getElementById("toast");
+  let toastTimer = null;
+
+  function current() {
+    return stack.length ? stack[stack.length - 1] : TREE;
+  }
+
+  function render() {
+    const node = current();
+    const isRoot = (node === TREE);
+
+    backBtn.classList.toggle("show", stack.length > 0);
+    levelTitle.textContent = isRoot ? "你想吃哪一类？" : node.name;
+
+    const icons = { "中餐": "🍚", "西餐": "🍕", "地方菜系": "🥘", "DIY自制": "🍳" };
+
+    let html = "";
+    node.children.forEach((child, i) => {
+      if (isRoot) {
+        const ic = icons[child.name] || "🍽️";
+        const extra = child.diy ? " diy" : "";
+        html += '<button class="hero-btn' + extra + '" data-idx="' + i + '">' +
+                '<span class="ic">' + ic + '</span><span>' + escapeHtml(child.name) + '</span></button>';
+        return;
+      }
+      let cls = "btn";
+      let label;
+      if (typeof child === "string") {
+        cls += " food";
+        label = child;
+      } else if (child.diy) {
+        cls += " cat diy";
+        label = child.name;
+      } else {
+        cls += " cat";
+        label = child.name;
+      }
+      html += '<button class="' + cls + '" data-idx="' + i + '">' + escapeHtml(label) + "</button>";
+    });
+    main.className = isRoot ? "hero-grid" : "grid";
+    main.innerHTML = html;
+    window.scrollTo(0, 0);
+  }
+
+  function showResult(food) {
+    resultFood.textContent = food;
+    mask.classList.add("show");
+  }
+
+  function toastMsg(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1600);
+  }
+
+  main.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-idx]");
+    if (!btn) return;
+    const child = current().children[Number(btn.dataset.idx)];
+
+    if (typeof child === "string") {
+      showResult(child);
+    } else if (child.diy) {
+      toastMsg("此功能尚未完善");
+    } else {
+      stack.push(child);
+      render();
+    }
+  });
+
+  backBtn.addEventListener("click", () => {
+    stack.pop();
+    render();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    stack = [];
+    render();
+  });
+
+  document.getElementById("againBtn").addEventListener("click", () => {
+    mask.classList.remove("show");
+    stack = [];
+    render();
+  });
+
+  mask.addEventListener("click", (e) => {
+    if (e.target === mask) mask.classList.remove("show");
+  });
+
+  // 底部随机一句话
+  document.getElementById("quote").textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
+  render();
+</script>
+</body>
+</html>
